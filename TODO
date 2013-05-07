@@ -1,0 +1,38 @@
+for week 7:
+
+//vertex from size 3 to size 6
+//change cube primitive to have duplicate vertices
+when creating primitives, calculate initial normals
+    //cube
+    sphere
+    cylinder
+    torus?
+create cross product function
+create vertex subtraction function
+faces should have direction
+    for each three vertices, find cross product
+    add that to faceDirection
+for each vertex
+    sum the faceDirections of each face containing that vertex
+    normalize that vector
+transform surface normals
+    treat the normal vector like a plane
+    to transform normal N by matrix M: N <dot> transpose of the inverse of M
+create z buffer, initialize to infinitely far: -FL
+during vertex projection, also calculate the projected z: fz/(f-z):
+    each vertex should also have r, g, b, and pz
+    with normal, map nx, ny, and nz to r, g, b
+update scan conversion algorithm:
+    vertices of trapezoids now have x, y, r, g, b, pz
+    for each line, r, g, b, y remain the same
+    for each pixel, check to see if it's the closest to the camera
+        then set the rgb found from the left/right vertex
+
+
+CUBE PRIMITIVE FACES:
+    --+,+-+,+++,-++
+    -+-,++-,+--,---
+    -++,+++,++-,-+-
+    --+,---,+--,+-+
+    +-+,+--,++-,+++
+    ---,--+,-++,-+-

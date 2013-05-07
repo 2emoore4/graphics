@@ -1,0 +1,38 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html">
+        <title>phong shading</title>
+        <link rel="stylesheet" href="../css/style.css">
+        <link rel="icon" type="image/png" href="http://evanmoore.no-ip.org/image/icon.png">
+        <script type="text/javascript">
+
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-38143907-1']);
+            _gaq.push(['_trackPageview']);
+
+            (function() {
+                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+            })();
+
+        </script>
+    </head>
+
+    <body>
+
+        <div class="applet">
+            <applet code="week8.Phong.class" height="480" width="640"></applet>
+        </div>
+
+        <div class="instructions">
+            Here's a demonstration of my phong shading implementation.<br><br>
+            I found some example ambient/diffuse/specular values for different materials, so I used those. The sphere is supposed to be unpolished silver, the cylinder is unpolished copper, and the cube is black plastic.<br><br>
+            You can kinda see seams between the faces, but I noticed that on Ken's presentation too, so I don't think it's an issue. It's much harder to notice with a higher polygon count. <br><br>
+            source: <a href="./week8/Phong.java">Phong.java</a> ... <a href="./util/">util classes</a><br>
+            you'll probably want to check out util/Material.java and util/ZRenderer.java
+        </div>
+
+    </body>
+</html>
