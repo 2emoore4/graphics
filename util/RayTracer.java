@@ -142,8 +142,10 @@ public class RayTracer {
 
         normalize(w);
 
-        for (int it = 0; it < sceneChildren.size(); it++) {
-            RaySphere sphere = (RaySphere) sceneChildren.get(it);
+        RayShape closest = closest(v, w, t);
+
+        if (closest != null) {
+            RaySphere sphere = (RaySphere) closest;
             tempMaterial = sphere.getMaterial();
 
             s[0] = sphere.getPosition()[0];
@@ -151,23 +153,15 @@ public class RayTracer {
             s[2] = sphere.getPosition()[2];
             s[3] = sphere.getRadius();
 
-            if (rayTrace(v, w, t)) {
-
-                if (t[0] < zbuf[i][j]) {
-
-                    for (int k = 0; k < 3; k++) {
-                        nn[k] = v[k] + t[0] * w[k] - s[k];
-                    }
-                    normalize(nn);
-                    computeShading(nn);
-
-                    pix[i + width * j][0] = (int) tempColor[0];
-                    pix[i + width * j][1] = (int) tempColor[1];
-                    pix[i + width * j][2] = (int) tempColor[2];
-
-                    zbuf[i][j] = t[0];
-                }
+            for (int k = 0; k < 3; k++) {
+                nn[k] = v[k] + closestDepth * w[k] - s[k];
             }
+            normalize(nn);
+            computeShading(nn);
+
+            pix[i + width * j][0] = (int) tempColor[0];
+            pix[i + width * j][1] = (int) tempColor[1];
+            pix[i + width * j][2] = (int) tempColor[2];
         }
     }
 
@@ -189,7 +183,7 @@ public class RayTracer {
             double b = 2 * dot(w, v_s);
             double c = dot(v_s, v_s) - s[3] * s[3];
 
-            if (solveQuadraticEquation(a, b, c, t) && t[0] > 0 && t[0] < closestDepth) {
+            if (solveQuadraticEquation(a, b, c, t)  && t[0] < closestDepth) {
                 closest = sphere;
                 closestDepth = t[0];
             }
