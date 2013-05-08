@@ -25,7 +25,7 @@ public class RayTracer {
     double[][][] lights = {
         { { 1.0, 1.0, 1.0}, {1.0, 1.0, 1.0} },
         { {-0.25,-0.25,-0.25}, {1.0, 1.0, 1.0} },
-        { {0.0, 0.0, 0.0},  {1.0, 1.0, 1.0} },
+        { {0.0, 0.0, 1.0},  {1.0, 1.0, 1.0} },
     };
     double[] eyeDir = {0.0, 0.0, 1.0};
 
@@ -223,11 +223,6 @@ public class RayTracer {
         for (int i = 0; i < tempColor.length; i++) {
             tempColor[i] = tempMaterial.getAmbientColor()[i];
         }
-
-        // // SCREW UP NORMALS TO APPLY TEXTURES
-        // if (textures) {
-        //     nn[0] += 0.8 * (ImprovedNoise.noise(x / 15.0, y / 15.0, z / 15.0));
-        // }
 
         if (textures) {
             double f0 = f(nn[0]      ,nn[1]      ,nn[2]      ),
@@ -507,26 +502,26 @@ public class RayTracer {
         // // pix[x + width * y][2] = 0;
     }
 
-    private int preciseEdgeLocation(int x, int y, int diff) {
-        if (diff == 1) {
-            // System.err.println("diff is 1");
-            if (edgeDetect(x, y, 1)) {
-                // System.err.println("edge is right");
-                return x;
-            } else if (edgeDetect(x - 1, y, 1)) {
-                // System.err.println("edge is left");
-                return x - 1;
-            }
-        } else {
-            if (edgeDetect(x - diff / 2, y, diff / 2)) {
-                // System.err.println("going left");
-                return preciseEdgeLocation(x - diff / 2, y, diff / 4);
-            } else if (edgeDetect(x, y, diff / 2)) {
-                // System.err.println("going right");
-                return preciseEdgeLocation(x, y, diff / 4);
-            }
-        }
+    // private int preciseEdgeLocation(int x, int y, int diff) {
+    //     if (diff == 1) {
+    //         // System.err.println("diff is 1");
+    //         if (edgeDetect(x, y, 1)) {
+    //             // System.err.println("edge is right");
+    //             return x;
+    //         } else if (edgeDetect(x - 1, y, 1)) {
+    //             // System.err.println("edge is left");
+    //             return x - 1;
+    //         }
+    //     } else {
+    //         if (edgeDetect(x - diff / 2, y, diff / 2)) {
+    //             // System.err.println("going left");
+    //             return preciseEdgeLocation(x - diff / 2, y, diff / 4);
+    //         } else if (edgeDetect(x, y, diff / 2)) {
+    //             // System.err.println("going right");
+    //             return preciseEdgeLocation(x, y, diff / 4);
+    //         }
+    //     }
 
-        return -1;
-    }
+    //     return -1;
+    // }
 }
