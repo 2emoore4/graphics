@@ -8,7 +8,7 @@ public class RayTracer {
     int width, height, xRes, yRes;
     int[] tmpBgColor, tmpBgColor2, tmpIntColor;
     int[][] pix, antialiasBuf;
-    double FL;
+    double FL, closestDepth;
     double[] v, w, s, v_s, nn, t, tempColor, tempVector;
     double[][] zbuf;
     ArrayList<RayShape> sceneChildren;
@@ -169,6 +169,33 @@ public class RayTracer {
                 }
             }
         }
+    }
+
+    private RayShape closest(double[] v, double[] w, double[] t) {
+        RayShape closest = null;
+        closestDepth = 100000;
+
+        for (int it = 0; it < sceneChildren.size(); it++) {
+            RaySphere sphere = (RaySphere) sceneChildren.get(it);
+
+            s[0] = sphere.getPosition()[0];
+            s[1] = sphere.getPosition()[1];
+            s[2] = sphere.getPosition()[2];
+            s[3] = sphere.getRadius();
+
+            diff(v, s, v_s);
+
+            double a = 1.0;
+            double b = 2 * dot(w, v_s);
+            double c = dot(v_s, v_s) - s[3] * s[3];
+
+            if (solveQuadraticEquation(a, b, c, t) && t[0] > 0 && t[0] < closestDepth) {
+                closest = sphere;
+                closestDepth = t[0];
+            }
+        }
+
+        return closest;
     }
 
     // RETURNS TRUE IF AN EDGE IS DETECTED IN THE 4X4 PX SQUARE WITH X,Y AS THE BOTTOM RIGHT CORNER
