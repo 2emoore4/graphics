@@ -1,0 +1,40 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html">
+        <title>full ray tracing</title>
+        <link rel="stylesheet" href="../css/style.css">
+        <link rel="icon" type="image/png" href="http://evanmoore.no-ip.org/image/icon.png">
+        <script type="text/javascript">
+
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-38143907-1']);
+            _gaq.push(['_trackPageview']);
+
+            (function() {
+                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+            })();
+
+        </script>
+    </head>
+
+    <body>
+
+        <div class="applet">
+            <applet code="week10.RaysRock.class" height="480" width="640"></applet>
+        </div>
+
+        <div class="instructions">
+            here's the final implementation of my ray tracer. it has subsampling, antialiasing, and textures. I didn't write the texture code though; I got it from one of Ken's applets. I just adapted it and tweaked it for my applet. note that this applet starts out exactly the same as last week's assignment. check out these instructions to enable the new features.<br><br>
+            press 's' to enable subsampling. press '2', '4', '6', or '8' to change the subsampling rate.<br><br>
+            press 'a' to enable antialiasing.<br><br>
+            press 't' to enable textures. press 'y', 'u', or 'i', to change the texture.<br><br>
+            press 'r' to reset everything.<br><br>
+            press 'l' to enable some different light stuff. one of the lights will move and the one in the back will change colors.<br><br>
+            source: <a href="./week10/RaysRock.java">RaysRock.java</a> ... <a href="./util/RaySphere.java">RaySphere.java</a> ... <a href="./util/RayTracer.java">RayTracer.java</a>
+        </div>
+
+    </body>
+</html>

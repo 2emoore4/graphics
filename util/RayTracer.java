@@ -5,27 +5,23 @@ import java.util.ArrayList;
 
 public class RayTracer {
 
-    int width, height, xRes, yRes;
+    int width, height;
     int[] tmpBgColor, tmpBgColor2, tmpIntColor;
-    int[][] pix, antialiasBuf;
+    int[][] pix;
+    double[][] antialiasBuf;
     double FL, closestDepth;
     double[] v, w, s, v_s, nn, t, tempColor, tempVector;
-    double[][] zbuf;
     ArrayList<RayShape> sceneChildren;
     Material tempMaterial;
 
-    boolean ss = true;
-    boolean aa = false;
-    boolean textures = false;
-    int type = 1;
-
-    int subSampleRate = 2;
+    boolean ss = false, aa = false, textures = false, shadows = false;
+    int type = 2, subSampleRate = 4;
 
     // ARRAY OF LIGHTS
     double[][][] lights = {
-        { { 1.0, 1.0, 1.0}, {1.0, 1.0, 1.0} },
+        { { 0.1, 0.1, 1.05}, {1.0, 1.0, 1.0} },
         { {-0.25,-0.25,-0.25}, {1.0, 1.0, 1.0} },
-        { {0.0, 0.0, 1.0},  {1.0, 1.0, 1.0} },
+        { {0.0, 0.0, 1.05},  {1.0, 1.0, 1.0} },
     };
     double[] eyeDir = {0.0, 0.0, 1.0};
 
@@ -33,14 +29,13 @@ public class RayTracer {
 
         this.width = w;
         this.height = h;
-        this.xRes = 1;
-        this.yRes = 1;
 
+        this.tmpBgColor = new int[3];
         this.tmpBgColor2 = new int[3];
         this.tmpIntColor = new int[3];
 
         this.pix = new int[width * height][3];
-        this.antialiasBuf = new int[17][3];
+        this.antialiasBuf = new double[9][3];
 
         this.FL = 10;
 
@@ -53,8 +48,6 @@ public class RayTracer {
         this.tempColor = new double[3];
         this.tempVector = new double[3];
 
-        this.zbuf = new double[width][height];
-
         this.sceneChildren = new ArrayList<RayShape>();
     }
 
@@ -63,10 +56,8 @@ public class RayTracer {
         return pix[x + width * y];
     }
 
-    // RESETS THE PIXEL ARRAY TO THE BACKGROUND COLOR
     public void resetPix() {
-
-        for (int y = 0; y < height; y++) {
+        for (int y = height - 4; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 pix[x + width * y][0] = (int) interpolate(y / (double) height, tmpBgColor[0], tmpBgColor2[0]);
                 pix[x + width * y][1] = (int) interpolate(y / (double) height, tmpBgColor[1], tmpBgColor2[1]);
@@ -74,9 +65,11 @@ public class RayTracer {
             }
         }
 
-        for (int i = 0; i < zbuf.length; i++) {
-            for (int j = 0; j < zbuf[0].length; j++) {
-                zbuf[i][j] = Double.MAX_VALUE;
+        for (int x = width - 4; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                pix[x + width * y][0] = (int) interpolate(y / (double) height, tmpBgColor[0], tmpBgColor2[0]);
+                pix[x + width * y][1] = (int) interpolate(y / (double) height, tmpBgColor[1], tmpBgColor2[1]);
+                pix[x + width * y][2] = (int) interpolate(y / (double) height, tmpBgColor[2], tmpBgColor2[2]);
             }
         }
     }
@@ -84,11 +77,11 @@ public class RayTracer {
     // MAIN LOOP
     public void renderWorld() {
 
-        castRay(0, 0);
+        castAndSet(0, 0);
 
         for (int y = subSampleRate; y < height; y += subSampleRate) {
 
-            castRay(0, y);
+            castAndSet(0, y);
 
             for (int x = subSampleRate; x < width; x += subSampleRate) {
 
@@ -97,12 +90,12 @@ public class RayTracer {
                         // EDGE DETECTED. CAST MORE RAYS.
                         for (int ySub = y - subSampleRate; ySub < y; ySub++) {
                             for (int xSub = x - subSampleRate; xSub < x; xSub++) {
-                                castRay(xSub, ySub);
+                                castAndSet(xSub, ySub);
                             }
                         }
                     } else {
                         // NO EDGE DETECTED. JUST INTERPOLATE.
-                        castRay(x - subSampleRate, y - subSampleRate);
+                        castAndSet(x - subSampleRate, y - subSampleRate);
 
                         int[] q12 = pix[(x - subSampleRate) + width * y];
                         int[] q21 = pix[x + width * (y - subSampleRate)];
@@ -123,16 +116,69 @@ public class RayTracer {
                 } else {
                     for (int ySub = y - subSampleRate; ySub < y; ySub++) {
                         for (int xSub = x - subSampleRate; xSub < x; xSub++) {
-                            castRay(xSub, ySub);
+                            castAndSet(xSub, ySub);
                         }
+                    }
+                }
+            }
+        }
+
+        if (aa) {
+
+            for (int y = 1; y < height - 1; y++) {
+                for (int x = 1; x < width - 1; x++) {
+                    if (edgeDetect(x, y, 1)) {
+                        superSample(x, y);
+                        superSample(x - 1, y);
+                        superSample(x, y - 1);
                     }
                 }
             }
         }
     }
 
+    private void superSample(int x, int y) {
+        castRay(x, y);
+        copyVector(tempColor, antialiasBuf[0]);
+        castRay(x - 0.5, y);
+        copyVector(tempColor, antialiasBuf[1]);
+        castRay(x, y - 0.5);
+        copyVector(tempColor, antialiasBuf[2]);
+        castRay(x - 0.5, y - 0.5);
+        copyVector(tempColor, antialiasBuf[3]);
+        castRay(x - 0.5, y + 0.5);
+        copyVector(tempColor, antialiasBuf[4]);
+        castRay(x, y + 0.5);
+        copyVector(tempColor, antialiasBuf[5]);
+        castRay(x + 0.5, y + 0.5);
+        copyVector(tempColor, antialiasBuf[6]);
+        castRay(x + 0.5, y);
+        copyVector(tempColor, antialiasBuf[7]);
+        castRay(x + 0.5, y - 0.5);
+        copyVector(tempColor, antialiasBuf[8]);
+
+        double rTotal = 0.0, gTotal = 0.0, bTotal = 0.0;
+
+        for (int i = 0; i < antialiasBuf.length; i++) {
+            rTotal += antialiasBuf[i][0];
+            gTotal += antialiasBuf[i][1];
+            bTotal += antialiasBuf[i][2];
+        }
+
+        pix[x + width * y][0] = (int) (rTotal / (double) antialiasBuf.length);
+        pix[x + width * y][1] = (int) (gTotal / (double) antialiasBuf.length);
+        pix[x + width * y][2] = (int) (bTotal / (double) antialiasBuf.length);
+    }
+
+    private void castAndSet(int i, int j) {
+        castRay(i, j);
+        pix[i + width * j][0] = (int) tempColor[0];
+        pix[i + width * j][1] = (int) tempColor[1];
+        pix[i + width * j][2] = (int) tempColor[2];
+    }
+
     // CASTS A RAY AT (I,J)
-    private void castRay(int i, int j) {
+    private boolean castRay(double i, double j) {
 
         double x = 0.8 * ((i + 0.5) / width - 0.5);
         double y = 0.8 * ((j + 0.5) / width - 0.5 * height / width);
@@ -157,12 +203,50 @@ public class RayTracer {
                 nn[k] = v[k] + closestDepth * w[k] - s[k];
             }
             normalize(nn);
-            computeShading(nn);
+            computeShading(nn, closest);
 
-            pix[i + width * j][0] = (int) tempColor[0];
-            pix[i + width * j][1] = (int) tempColor[1];
-            pix[i + width * j][2] = (int) tempColor[2];
+            return true;
+        } else {
+
+            tempColor[0] = interpolate(j / (double) height, tmpBgColor[0], tmpBgColor2[0]);
+            tempColor[1] = interpolate(j / (double) height, tmpBgColor[1], tmpBgColor2[1]);
+            tempColor[2] = interpolate(j / (double) height, tmpBgColor[2], tmpBgColor2[2]);
+
+            return false;
         }
+    }
+
+    // CASTS A RAY FROM (X1, Y1, Z1) to (X2, Y2, Z2)
+    private boolean castRay(RayShape sphere, double x1, double y1, double z1, double x2, double y2, double z2) {
+
+        set(v, x1, y1, z1);
+        set(w, x2, y2, z2);
+
+        for (int it = 0; it < sceneChildren.size(); it++) {
+            RayShape shape = sceneChildren.get(it);
+            if (shape != sphere) {
+
+                RaySphere targetSphere = (RaySphere) shape;
+
+                s[0] = targetSphere.getPosition()[0];
+                s[1] = targetSphere.getPosition()[1];
+                s[2] = targetSphere.getPosition()[2];
+                s[3] = targetSphere.getRadius();
+
+                // System.err.println("against sphere at " + s[0] + "," + s[1]);
+                // System.err.println("vector starts at " + x1 + "," + y1 + "," + z1);
+                // System.err.println("and goes to      " + x2 + "," + y2 + "," + z2);
+
+                if (rayTrace(v, w, t) && (t[0] > 0 || t[1] > 0)) {
+                    // System.err.println("we have a bingo\n");
+                    return true;
+                }
+            }
+        }
+
+        // System.err.println();
+
+        return false;
     }
 
     private RayShape closest(double[] v, double[] w, double[] t) {
@@ -183,7 +267,7 @@ public class RayTracer {
             double b = 2 * dot(w, v_s);
             double c = dot(v_s, v_s) - s[3] * s[3];
 
-            if (solveQuadraticEquation(a, b, c, t)  && t[0] < closestDepth) {
+            if (solveQuadraticEquation(a, b, c, t) && t[0] < closestDepth) {
                 closest = sphere;
                 closestDepth = t[0];
             }
@@ -195,7 +279,7 @@ public class RayTracer {
     // RETURNS TRUE IF AN EDGE IS DETECTED IN THE 4X4 PX SQUARE WITH X,Y AS THE BOTTOM RIGHT CORNER
     private boolean edgeDetect(int x, int y, int diff) {
 
-        castRay(x, y);
+        castAndSet(x, y);
 
         int[] left = pix[(x - diff) + width * y];
         int[] up = pix[x + width * (y - diff)];
@@ -238,7 +322,7 @@ public class RayTracer {
     }
 
     // COMPUTE SHADING FOR INDIVIDUAL PIXEL, DEPENDING ON NORMAL DIRECTION
-    private void computeShading(double[] nn) {
+    private void computeShading(double[] nn, RayShape sphere) {
 
         // RESET TEMPORARY COLOR ARRAY
         for (int i = 0; i < tempColor.length; i++) {
@@ -258,23 +342,33 @@ public class RayTracer {
             nn[2] -= (fz - f0) / .0001;
         }
 
+        // System.err.println("checking sphere at " + s[0] + "," + s[1] + " at point " + s[0] + nn[0] + "," + s[1] + nn[1]);
+
         // FOR EACH LIGHT SOURCE
         for (int i = 0; i < lights.length; i++) {
+
+            // System.err.println("looking for blockages to light at " + lights[i][0][0] + "," + lights[i][0][1] + "," + lights[i][0][2]);
+
+            // CHECK TO SEE IF SOMETHING IS BLOCKING THE LIGHT AND SPHERE
 
             // LIGHT DIRECTION
             double[] lDir = lights[i][0];
 
-            // REFLECTION DIRECTION
-            for (int k = 0; k < 3; k++) {
-                tempVector[k] = 2 * (dot(lDir, nn)) * nn[k] - lDir[k];
-            }
-            double[] rDir = tempVector;
-            normalize(rDir);
+            if (!shadows || !castRay(sphere, s[0] + nn[0], s[1] + nn[1], s[2] + nn[2], lights[i][0][0], lights[i][0][1], lights[i][0][2])) {
 
-            // FOR EACH COLOR IN RGB
-            for (int j = 0; j < 3; j++) {
-                tempColor[j] += lights[i][1][j] * (tempMaterial.getDiffuseColor()[j] * Math.max(0.0, dot(lDir, nn)) +
-                                tempMaterial.getSpecularColor()[j] * Math.pow(Math.max(0.0, dot(rDir, eyeDir)), tempMaterial.getSpecularPower()));
+                // REFLECTION DIRECTION
+                for (int k = 0; k < lDir.length; k++) {
+                    tempVector[k] = 2 * (dot(lDir, nn)) * nn[k] - lDir[k];
+                }
+                double[] rDir = tempVector;
+                normalize(rDir);
+
+                // FOR EACH COLOR IN RGB
+                for (int j = 0; j < 3; j++) {
+                    tempColor[j] += lights[i][1][j] *
+                                   (tempMaterial.getDiffuseColor()[j] * Math.max(0.0, dot(lDir, nn)) +
+                                    tempMaterial.getSpecularColor()[j] * Math.pow(Math.max(0.0, dot(rDir, eyeDir)), tempMaterial.getSpecularPower()));
+                }
             }
         }
 
@@ -325,26 +419,18 @@ public class RayTracer {
 
     // SETS THE BACKGROUND COLOR, AS WELL AS THE GRADIENT COLOR
     public void setBGColor(int[] rgb) {
-        this.tmpBgColor = rgb;
+        for (int i = 0; i < rgb.length; i++) {
+            this.tmpBgColor[i] = rgb[i] - 50;
+        }
 
         for (int i = 0; i < rgb.length; i++) {
-            this.tmpBgColor2[i] = this.tmpBgColor[i] + 50;
+            this.tmpBgColor2[i] = rgb[i] + 50;
         }
     }
 
     // RETURNS THE ARRAY OF LIGHTS IN THE SCENE
     public double[][][] getLights() {
         return lights;
-    }
-
-    // SETS THE X RESOLUTION OF THE SCENE
-    public void setXRes(int x) {
-        this.xRes = x;
-    }
-
-    // SETS THE Y RESOLUTION OF THE SCENE
-    public void setYRes(int y) {
-        this.yRes = y;
     }
 
     // INTERPOLATE BETWEEN TWO POINTS
@@ -363,8 +449,8 @@ public class RayTracer {
     double f(double x, double y, double z) {
         switch (type) {
         case 0:  return  .06 * noise(x/2.0,y/2.0,z/2.0, 8);
-        case 1:  return  .01 * stripes(x + 2*turbulence(x,y,z,1), 1.6);
-        default: return -.10 * turbulence(x,y,z, 1);
+        case 1:  return  .01 * stripes(x + 2*turbulence(x/2.0,y/2.0,z/2.0,1), 1.6);
+        default: return -.10 * turbulence(x/2.0,y/2.0,z/2.0, 1);
         }
     }
 
@@ -395,26 +481,42 @@ public class RayTracer {
        return ImprovedNoise.noise(freq*x1 + 100, freq*y1, freq*z1);
     }
 
-    // private int preciseEdgeLocation(int x, int y, int diff) {
-    //     if (diff == 1) {
-    //         // System.err.println("diff is 1");
-    //         if (edgeDetect(x, y, 1)) {
-    //             // System.err.println("edge is right");
-    //             return x;
-    //         } else if (edgeDetect(x - 1, y, 1)) {
-    //             // System.err.println("edge is left");
-    //             return x - 1;
-    //         }
-    //     } else {
-    //         if (edgeDetect(x - diff / 2, y, diff / 2)) {
-    //             // System.err.println("going left");
-    //             return preciseEdgeLocation(x - diff / 2, y, diff / 4);
-    //         } else if (edgeDetect(x, y, diff / 2)) {
-    //             // System.err.println("going right");
-    //             return preciseEdgeLocation(x, y, diff / 4);
-    //         }
-    //     }
+    public void copyVector(double[] a, double[] b) {
+        for (int i = 0; i < a.length; i++) {
+            b[i] = a[i];
+        }
+    }
 
-    //     return -1;
-    // }
+    public void toggleSS() {
+        this.ss = !this.ss;
+    }
+
+    public void toggleAA() {
+        this.aa = !this.aa;
+    }
+
+    public void setSSRate(int rate) {
+        this.subSampleRate = rate;
+    }
+
+    public void toggleTextures() {
+        this.textures = !this.textures;
+    }
+
+    public void setTexture(int type) {
+        this.type = type;
+    }
+
+    public void toggleShadows() {
+        this.shadows = !this.shadows;
+    }
+
+    public void resetStuff() {
+        this.ss = false;
+        this.aa = false;
+        this.subSampleRate = 2;
+        this.textures = false;
+        this.type = 0;
+        this.shadows = false;
+    }
 }

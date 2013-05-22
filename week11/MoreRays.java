@@ -1,17 +1,58 @@
-package test;
+package week11;
 
 import java.awt.*;
+import java.awt.event.*;
 import util.MISApplet;
 import util.RaySphere;
 import util.RayTracer;
 
-public class Test extends MISApplet {
+public class MoreRays extends MISApplet implements KeyListener {
+
+    public void keyPressed(KeyEvent e) {}
+
+    // RESPOND TO KEY PRESSES
+    public void keyTyped(KeyEvent e) {
+        if (e.getKeyChar() == 'a') {
+            rayTracer.toggleAA();
+        } else if (e.getKeyChar() == 's') {
+            rayTracer.toggleSS();
+        } else if (e.getKeyChar() == 't') {
+            rayTracer.toggleTextures();
+        } else if (e.getKeyChar() == 'y') {
+            rayTracer.setTexture(0);
+        } else if (e.getKeyChar() == 'u') {
+            rayTracer.setTexture(1);
+        } else if (e.getKeyChar() == 'i') {
+            rayTracer.setTexture(2);
+        } else if (e.getKeyChar() == '2') {
+            rayTracer.setSSRate(2);
+        } else if (e.getKeyChar() == '4') {
+            rayTracer.setSSRate(4);
+        } else if (e.getKeyChar() == '6') {
+            rayTracer.setSSRate(6);
+        } else if (e.getKeyChar() == '8') {
+            rayTracer.setSSRate(8);
+        } else if (e.getKeyChar() == 'r') {
+            rayTracer.resetStuff();
+        } else if (e.getKeyChar() == 'l') {
+            lights = !lights;;
+        } else if (e.getKeyChar() == 'h') {
+            rayTracer.toggleShadows();
+        }
+    }
+
+    public void keyReleased(KeyEvent e) {}
 
     RayTracer rayTracer;
-    RaySphere sphere, sphere2, sphere3, sphere4;
+    RaySphere sphere, sphere2, sphere3;
+    boolean lights = false;
 
     @Override
     public void initialize() {
+
+        addKeyListener(this);
+        requestFocus();
+
         rayTracer = new RayTracer(W, H);
         rayTracer.setBGColor(new int[] {152, 205, 202});
 
@@ -22,7 +63,6 @@ public class Test extends MISApplet {
         sphere.getMaterial().setDiffuseColor(0.5,0.0,0.0);
         sphere.getMaterial().setSpecularColor(0.7,0.6,0.6);
         sphere.getMaterial().setSpecularPower(32.0);
-        sphere.setPosition(0.0, -0.2, 0.0);
         rayTracer.add(sphere);
 
         // CYAN PLASTIC
@@ -32,7 +72,6 @@ public class Test extends MISApplet {
         sphere2.getMaterial().setDiffuseColor(0.0,0.50980392,0.50980392);
         sphere2.getMaterial().setSpecularColor(0.50196078,0.50196078,0.50196078);
         sphere2.getMaterial().setSpecularPower(32.0);
-        sphere2.setPosition(0.2, 0.0, 0.0);
         rayTracer.add(sphere2);
 
         // COPPER
@@ -50,11 +89,13 @@ public class Test extends MISApplet {
     @Override
     public void initFrame(double time) {
 
-        rayTracer.getLights()[2][0][0] = Math.sin(time * 0.5);
-        rayTracer.getLights()[2][0][1] = Math.cos(time * 0.5);
+        if (lights) {
+            rayTracer.getLights()[2][0][0] = Math.sin(time * 0.5);
+            rayTracer.getLights()[2][0][1] = Math.cos(time * 0.5);
 
-        rayTracer.getLights()[1][1][0] += Math.sin(time * 2) * 0.25;
-        rayTracer.getLights()[1][1][2] += Math.cos(time * 2) * 0.25;
+            rayTracer.getLights()[1][1][0] += Math.sin(time * 2) * 0.25;
+            rayTracer.getLights()[1][1][2] += Math.cos(time * 2) * 0.25;
+        }
 
         sphere.setPosition(0.0,
                            -0.2 * Math.cos(time),

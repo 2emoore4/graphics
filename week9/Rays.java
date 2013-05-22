@@ -12,22 +12,22 @@ public class Rays extends MISApplet implements KeyListener {
 
     // RESPOND TO KEY PRESSES
     public void keyTyped(KeyEvent e) {
-        if (e.getKeyChar() == '1') {
-            rayTracer.setXRes(1);
-            rayTracer.setYRes(1);
-        } else if (e.getKeyChar() == '2') {
-            rayTracer.setXRes(2);
-            rayTracer.setYRes(2);
-        } else if (e.getKeyChar() == '3') {
-            rayTracer.setXRes(1);
-            rayTracer.setYRes(3);
-        } else if (e.getKeyChar() == '4') {
-            rayTracer.setXRes(3);
-            rayTracer.setYRes(1);
-        } else if (e.getKeyChar() == '5') {
-            rayTracer.setXRes(5);
-            rayTracer.setYRes(5);
-        }
+        // if (e.getKeyChar() == '1') {
+        //     rayTracer.setXRes(1);
+        //     rayTracer.setYRes(1);
+        // } else if (e.getKeyChar() == '2') {
+        //     rayTracer.setXRes(2);
+        //     rayTracer.setYRes(2);
+        // } else if (e.getKeyChar() == '3') {
+        //     rayTracer.setXRes(1);
+        //     rayTracer.setYRes(3);
+        // } else if (e.getKeyChar() == '4') {
+        //     rayTracer.setXRes(3);
+        //     rayTracer.setYRes(1);
+        // } else if (e.getKeyChar() == '5') {
+        //     rayTracer.setXRes(5);
+        //     rayTracer.setYRes(5);
+        // }
     }
 
     public void keyReleased(KeyEvent e) {}

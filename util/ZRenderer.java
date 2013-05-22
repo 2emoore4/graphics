@@ -19,7 +19,7 @@ public class ZRenderer {
     // ARRAY OF LIGHTS
     double[][][] lights = {
         { { 1.0, 1.0, 1.0}, {1.0, 1.0, 1.0} },
-        { {-1.0,-1.0,-1.0}, {1.0, 1.0, 1.0} },
+        // { {-1.0,-1.0,-1.0}, {1.0, 1.0, 1.0} },
     };
     double[] eyeDir = {0.0, 0.0, 1.0};
     Material tmpMaterial;

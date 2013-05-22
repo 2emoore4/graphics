@@ -1,0 +1,95 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html">
+        <title>extra stuff</title>
+        <link rel="stylesheet" href="../css/style.css">
+        <link rel="icon" type="image/png" href="http://evanmoore.no-ip.org/image/icon.png">
+        <script type="text/javascript">
+
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-38143907-1']);
+            _gaq.push(['_trackPageview']);
+
+            (function() {
+              var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+              ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+              var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+            })();
+
+        </script>
+    </head>
+
+    <body>
+
+        <div class="post">
+
+            <div class="blogTitle">
+                real life raytracer
+            </div>
+            <div class="blogSubtitle">
+                evan moore - 3d imaging thing
+            </div>
+
+            <div class="blogLab">
+
+                <div class="blogLabTitle">here it is.</div>
+
+                <p align="center">
+                    this is actually a project that I did for another class (physical computing, taught by Amos Bloomberg) but I wanted to show it because it's really similar to what we did in computer graphics. the class is kinda a mix of electronics and robotics. we were working with arduinos for the whole semester. we were basically allowed to do whatever project we wanted for the final. I decided to make an infrared 3d imaging device. originally I was hoping to use an ultrasonic rangefinder, but that ended up being way too inaccurate. my infrared sensor had a range of 150cm, so I was only able to scan close objects. my ultimate goal was to make it a cheaper alternative to the infrared camera that you can find in a kinect. you'll see later if I succeeded.<br><br>
+                    my device does something really similar to ray tracing. the ray in this case is is just a beam of infrared light. the beam hits an object and gets reflected back to the sensor. at that point, the sensor knows how far away the closest object is.<br><br>
+                    the infrared sensor is mounted on a lego contraption that is built with two servo motors (one for X and one for Y) that are connected to an arduino. the arduino reads the distances and sends them back to a computer (via serial port) which is running a processing applet (we were urged to use processing throughout this class).<br><br>
+                    here are some pictures of the physical device.<br><br>
+                </p>
+
+                <div class="blogImage">
+                    <a href="http://i.imgur.com/f3FXtkwh.jpg">
+                        <img src="http://i.imgur.com/f3FXtkwh.jpg" width="480">
+                    </a>
+                </div>
+
+                <div class="blogImage">
+                    <a href="http://i.imgur.com/zNk1tAKh.jpg">
+                        <img src="http://i.imgur.com/zNk1tAKh.jpg" width="480">
+                    </a>
+                </div>
+
+                <p align="center">
+                    at this point, it was really easy to get it to perform it's scanning motion. for a window of size 500 px X 500 px, I just needed two for loops, one each for X and Y ranging from 0 to 500. then I mapped this index to a certain angle that the servo motor could read. after it writes to the servo, it delays, then moves onto the next pixel. here's a video of it in action.<br><br>
+                </p>
+
+                <iframe width="480" height="270" src="http://www.youtube.com/embed/ORIlwsMa0U8?rel=0" frameborder="0" allowfullscreen></iframe>
+
+                <p align="center">
+                    now that it can scan properly, all that's left is writing the processing applet. first, I had to figure out how I was going to send the data from the arduino to processing. I decided that every time the sensor made a reading, it would send the X, Y, and Z values. I thought this would work well, but I started to have some huge synchronization issues. these happened because processing had no idea which value it was receiving. it wasn't able to differentiate between X, Y, and Z values because they all looked the same. to solve this, I decided to have the arduino send packet-like things. it would send a string "go" so that processing knows that its receiving a packet. from there, it's obvious that the next value will be X, the next value will be Y, and the last value will be Z. then it processes that data and waits for the next "go" signal.<br><br>
+                    the packet processing was fairly simple. since the packet already contained the exact X and Y coordinates, it only really needed to process the Z value. this all depended on how I wanted to display the data. I decided to make a heatmap-type thing. the background would be blue and the closest objects would be red. to do this, I just mapped the z value to a color from red to blue and set the pixel at (X, Y) to that color.<br><br>
+                    this worked really well after only a few tries. for my first test, I scanned this plaster hand sculpture thing. I started the scan and left because I knew it would take a while. I kept coming back to it and it was taking forever. it ended up taking an hour and a half to finish the whole 500 x 500 scan although it looked really good. here's a video of the first scan. you won't want to watch the whole thing. just skip ahead.<br><br>
+                </p>
+
+                <iframe width="480" height="360" src="http://www.youtube.com/embed/PkGNK-ruYoI?rel=0" frameborder="0" allowfullscreen></iframe>
+
+                <p align="center">
+                    I ended up making some enhacements that would make the device faster and more accurate. actually, believe it or not, that last scan was after I made these improvements.<br><br>
+                    there are two important techniques used for ray tracing that would help this project. the first is subsampling. if this device were to scan every single pixel, it would take forever, and it would be wasting a lot of time scanning the background. there's no point scanning every pixel of the background, since it never changes. therefore, the device should only scan every fourth (or more) pixel. after a scan is made, checks for an edge between the last two pixels. since an edge needs to be recorded precisely, it goes back and rescans the pixels that it skipped. however, if an edge is NOT detected it can go back through those pixels and interpolate the color value based on the two recordings. this ended up improving the speed a little.<br><br>
+                    the next technique I used was supersampling. I wouldn't exactly call it antialiasing because it's a little different from what we did in our ray tracers. rather than record one value at each pixel, it records many distance readings. it wouldn't be right to average these readings, because then the data would be skewed by outliers. instead, it takes 9 readings, shoves them into an array, sorts the array, then finds the mode. if there is no mode, then it takes the median. supersampling works really well for this device because it corrects the data which is sometimes pretty fuzzy. these two methods may not have caused a huge speed increase, but I doubt that they slowed it down, and they definitely made it more accurate.
+                </p>
+
+                <p align="center">
+                    <br><br>check out the code that it's running. further down are some concluding thoughts.<br><br>
+                </p>
+
+                <script src="https://gist.github.com/2emoore4/5589618.js"></script>
+
+                <p align="center">
+                    despite the original issues with the sonar sensor, I'm really happy with how this project turned out. I was worried that my first scan would come up with something that looked nothing like a hand. not only could you see the hand, but you could see it pretty clearly. with the data recorded from this device, it would actually be pretty easy to create a 3d model since I already have the coordinates of each vertex (X, Y, Z).<br><br>
+                    I wouldn't be able to hand-make a 3d model of a hand that is as accurate as this one, and I definitely wouldn't be able to do it in less than an hour and a half. because of this, I think this device could have some practical applications. like I said, I was hoping it would be a cheaper implementation of an IR camera, like the kinect has. of course it's cheaper, but also waaaaaaay slower. the kinect can do basically the same thing as my device, but almost instantly.<br><br>
+                    so while my device would not meet the expectations of a commercial product, I'm still happy with how it turned out.
+                </p>
+
+            </div>
+
+        </div>
+
+    </body>
+
+</html>

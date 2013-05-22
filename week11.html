@@ -1,0 +1,41 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html">
+        <title>more ray tracing</title>
+        <link rel="stylesheet" href="../css/style.css">
+        <link rel="icon" type="image/png" href="http://evanmoore.no-ip.org/image/icon.png">
+        <script type="text/javascript">
+
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-38143907-1']);
+            _gaq.push(['_trackPageview']);
+
+            (function() {
+                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+            })();
+
+        </script>
+    </head>
+
+    <body>
+
+        <div class="applet">
+            <applet code="week11.MoreRays.class" height="480" width="640"></applet>
+        </div>
+
+        <div class="instructions">
+            after I finished the last assignment, I decided to implement shadows in my ray tracer. here they are. there are two lights in the front of the scene. one is at (0, 0, 1.05) and the other is set a little bit to the bottom right. the applet is the same as last week. just press 'h' to enable or disable shadows.<br><br>
+            you can enable textures and shadows at the same time. it'll look cool but it's totally wrong, just because I heavily depended on the correct sphere normals when I was doing the shadow stuff.<br><br>
+            press 's' to enable subsampling. press '2', '4', '6', or '8' to change the subsampling rate.<br><br>
+            press 'a' to enable antialiasing.<br><br>
+            press 't' to enable textures. press 'y', 'u', or 'i', to change the texture.<br><br>
+            press 'r' to reset everything.<br><br>
+            press 'l' to enable some different light stuff. one of the lights will move and the one in the back will change colors.<br><br>
+            source: <a href="./week11/MoreRays.java">MoreRays.java</a> ... <a href="./util/RaySphere.java">RaySphere.java</a> ... <a href="./util/RayTracer.java">RayTracer.java</a>
+        </div>
+
+    </body>
+</html>
